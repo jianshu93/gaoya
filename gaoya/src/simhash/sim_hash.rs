@@ -89,6 +89,7 @@ mod tests {
     use crate::simhash::SimHashBits;
     use crate::text::whitespace_split;
     use crate::simhash::sim_hasher::{Xxh3Hasher64, Xxh3Hasher128};
+    use std::time::Instant;
     static S1: &'static str = "SimHash is a technique used for detecting near-duplicates or for locality sensitive hashing. It was developed by Moses Charikar and is often used in large-scale applications to reduce the dimensionality of high-dimensional data, making it easier to process";
 
     static S2: &'static str = "SimHash is a technique used for detecting near-duplicates or for locality sensitive hashing. It was developed by Moses Charikar and is often utilized in large-scale applications to reduce the dimensionality of high-dimensional data, making it easier to analyze";
@@ -122,6 +123,36 @@ mod tests {
         let s1 = sim_hash.create_signature(whitespace_split(S1));
         let s2 = sim_hash.create_signature(whitespace_split(S2));
         assert!(s1.hamming_distance(&s2) < 15);      // ≈12 % of 128 bits
+    }
+    #[test]
+    fn simhash_large() {
+        use rand::{Rng, SeedableRng};
+        use rand::rngs::StdRng;
+
+        // Helper identical to the small test
+        fn whitespace_split(s: &str) -> impl Iterator<Item = &str> { s.split_whitespace() }
+
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // S1: 10 000 random u64 numbers separated by spaces
+        let data1: Vec<u64> = (0..1_000).map(|_| rng.gen()).collect();
+        let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+
+        // S2: clone + tweak every 20th element  (≈5 % difference)
+        let mut data2 = data1.clone();
+        for i in (0..1_000).step_by(20) {
+            data2[i] = data2[i].wrapping_add(1);
+        }
+        let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+
+        let sim_hash = SimHash::<Xxh3Hasher128, u128, 128>::new(Xxh3Hasher128::new());
+        let t1 = Instant::now();
+        let s1 = sim_hash.create_signature(whitespace_split(&s1));
+        let s2 = sim_hash.create_signature(whitespace_split(&s2));
+        let dur = t1.elapsed();
+        println!("SimHash: {:?}", dur);
+        assert!(s1.hamming_distance(&s2) < 16);     // ≈5 % of 128 bits
+
     }
 
 }

@@ -268,6 +268,7 @@ dependencies = [
  "itertools",
  "num-traits",
  "rand 0.8.5",
+ "rand_core 0.9.3",
  "rand_pcg",
  "random_choice",
  "rayon",
@@ -277,6 +278,7 @@ dependencies = [
  "siphasher",
  "smallvec",
  "triomphe",
+ "wyhash",
  "xxhash-rust",
 ]
 
@@ -659,6 +661,12 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.16",
 ]
+
+[[package]]
+name = "rand_core"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
 
 [[package]]
 name = "rand_pcg"
@@ -1223,6 +1231,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "wyhash"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca4d373340c479fd1e779f7a763acee85da3e423b1a9a9acccf97babcc92edbb"
+dependencies = [
+ "rand_core 0.9.3",
 ]
 
 [[package]]

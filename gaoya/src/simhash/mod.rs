@@ -2,6 +2,7 @@ mod permutation;
 mod sim_hash;
 mod sim_hash_index;
 mod sim_hasher;
+mod fast_sim_hash;
 
 pub use self::sim_hash::SimHash;
 pub use self::sim_hash_index::SimHashIndex;
@@ -9,6 +10,7 @@ pub use self::sim_hasher::SimSipHasher128;
 pub use self::sim_hasher::SimSipHasher64;
 pub use self::sim_hasher::Xxh3Hasher64;
 pub use self::sim_hasher::Xxh3Hasher128;
+pub use self::fast_sim_hash::FastSimHash;
 
 use core::{fmt, mem};
 
