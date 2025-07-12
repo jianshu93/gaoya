@@ -88,7 +88,7 @@ mod tests {
     use crate::simhash::sim_hasher::{ShaHasher64, SimSipHasher64};
     use crate::simhash::SimHashBits;
     use crate::text::whitespace_split;
-
+    use crate::simhash::sim_hasher::{Xxh3Hasher64, Xxh3Hasher128};
     static S1: &'static str = "SimHash is a technique used for detecting near-duplicates or for locality sensitive hashing. It was developed by Moses Charikar and is often used in large-scale applications to reduce the dimensionality of high-dimensional data, making it easier to process";
 
     static S2: &'static str = "SimHash is a technique used for detecting near-duplicates or for locality sensitive hashing. It was developed by Moses Charikar and is often utilized in large-scale applications to reduce the dimensionality of high-dimensional data, making it easier to analyze";
@@ -107,6 +107,21 @@ mod tests {
         let s1 = sim_hash.create_signature(whitespace_split(S1));
         let s2 = sim_hash.create_signature(whitespace_split(S2));
         assert!(s1.hamming_distance(&s2) < 13);
+    }
+    #[test]
+    pub fn test_sim_hash_xxh3_64() {
+        let sim_hash = SimHash::<Xxh3Hasher64, u64, 64>::new(Xxh3Hasher64::new());
+        let s1 = sim_hash.create_signature(whitespace_split(S1));
+        let s2 = sim_hash.create_signature(whitespace_split(S2));
+        assert!(s1.hamming_distance(&s2) < 8);       // expect ~12% diff
+    }
+
+    #[test]
+    pub fn test_sim_hash_xxh3_128() {
+        let sim_hash = SimHash::<Xxh3Hasher128, u128, 128>::new(Xxh3Hasher128::new());
+        let s1 = sim_hash.create_signature(whitespace_split(S1));
+        let s2 = sim_hash.create_signature(whitespace_split(S2));
+        assert!(s1.hamming_distance(&s2) < 15);      // ≈12 % of 128 bits
     }
 
 }

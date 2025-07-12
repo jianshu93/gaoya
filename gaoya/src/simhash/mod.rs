@@ -7,6 +7,8 @@ pub use self::sim_hash::SimHash;
 pub use self::sim_hash_index::SimHashIndex;
 pub use self::sim_hasher::SimSipHasher128;
 pub use self::sim_hasher::SimSipHasher64;
+pub use self::sim_hasher::Xxh3Hasher64;
+pub use self::sim_hasher::Xxh3Hasher128;
 
 use core::{fmt, mem};
 
