@@ -8,6 +8,7 @@ use wyhash::WyRng;
 use rand_core::{RngCore, SeedableRng};
 use crate::simhash::SimHashBits;
 use crate::simhash::sim_hasher::SimHasher;
+use crate::simhash::BitArray;
 
 pub struct FastSimHash<H, S, const L: usize, const BULK: usize = 3>
 where
@@ -59,7 +60,6 @@ where
     /// Produce the L-bit SimHash signature for an iterator of features.
     /// * `T` is any iterator
     /// * `U: Hash` is the feature type (tokens, shingles, integers, …)
-    #[inline]
     pub fn create_signature<T, U>(&self, iter: T) -> S
     where
         T: Iterator<Item = U>,
@@ -127,7 +127,6 @@ where
     }
 
     /// Merge the temporary packed counters into the final `counts` array.
-    #[inline(always)]
     fn flush_tmp<const L2: usize, const B: usize>(
         counts: &mut [i32; L2],
         tmp: &mut [u64],
@@ -157,6 +156,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::FastSimHash;
+    use crate::simhash::BitArray;
     use crate::simhash::SimHashBits;
     use num_traits::real::Real;
     use super::SimHasher;
@@ -190,7 +190,7 @@ mod tests {
         type Bits = u128;
         const L: usize = 128;
         // build deterministic test data 
-        const N: usize = 1_000;
+        const N: usize = 10_000;
         let mut rng = StdRng::seed_from_u64(42);
 
         // S1: 10 000 random u64 numbers separated by spaces
@@ -212,5 +212,39 @@ mod tests {
         println!("fast  SimHash: {:?}", dur_fast);
         // 5 % token change → expect roughly 5 % differing bits (≈6 of 128)
         assert!(h1.hamming_distance(&h2) < 6);
+    }
+    #[test]
+    fn fast_simhash_bitarray() {
+        use rand::{Rng, SeedableRng};
+        use rand::rngs::StdRng;
+
+        // Helper identical to the small test
+        fn whitespace_split(s: &str) -> impl Iterator<Item = &str> { s.split_whitespace() }
+
+        type Bits = BitArray<16>;
+        const L: usize = 1024;
+        // build deterministic test data 
+        const N: usize = 10_000;
+        let mut rng = StdRng::seed_from_u64(42);
+
+        // S1: 10 000 random u64 numbers separated by spaces
+        let data1: Vec<u64> = (0..N).map(|_| rng.gen()).collect();
+        let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+
+        // S2: clone + tweak every 20th element  (≈5 % difference)
+        let mut data2 = data1.clone();
+        for i in (0..N).step_by(20) {
+            data2[i] = data2[i].wrapping_add(1);
+        }
+        let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+
+        let fsh = FastSimHash::<Xxh3Hasher64, Bits, L>::new(Xxh3Hasher64::new());
+        let t1 = Instant::now();
+        let h1 = fsh.create_signature(whitespace_split(&s1));
+        let h2 = fsh.create_signature(whitespace_split(&s2));
+        let dur_fast = t1.elapsed();
+        println!("fast  SimHash: {:?}", dur_fast);
+        // 5 % token change → expect roughly 5 % differing bits
+        assert!(h1.hamming_distance(&h2) < 52);
     }
 }

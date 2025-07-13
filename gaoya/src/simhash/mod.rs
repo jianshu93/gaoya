@@ -3,7 +3,9 @@ mod sim_hash;
 mod sim_hash_index;
 mod sim_hasher;
 mod fast_sim_hash;
+mod bitarray;
 
+pub use bitarray::BitArray; 
 pub use self::sim_hash::SimHash;
 pub use self::sim_hash_index::SimHashIndex;
 pub use self::sim_hasher::SimSipHasher128;
