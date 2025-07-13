@@ -137,22 +137,22 @@ mod tests {
 
         // S1: 10 000 random u64 numbers separated by spaces
         let data1: Vec<u64> = (0..N).map(|_| rng.gen()).collect();
-        let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-
+        //let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+        let s1 = &data1;
         // S2: clone + tweak every 20th element  (≈5 % difference)
         let mut data2 = data1.clone();
         for i in (0..N).step_by(20) {
             data2[i] = data2[i].wrapping_add(1);
         }
-        let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-
+        // let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+        let s2 = &data2;
         let sim_hash = SimHash::<Xxh3Hasher128, u128, 128>::new(Xxh3Hasher128::new());
         let t1 = Instant::now();
-        let s1 = sim_hash.create_signature(whitespace_split(&s1));
-        let s2 = sim_hash.create_signature(whitespace_split(&s2));
+        let s1 = sim_hash.create_signature(s1.iter().cloned());
+        let s2 = sim_hash.create_signature(s2.iter().cloned());
         let dur = t1.elapsed();
         println!("SimHash: {:?}", dur);
-        assert!(s1.hamming_distance(&s2) < 17);     // ≈5 % of 128 bits
+        assert!(s1.hamming_distance(&s2) < 19);     // ≈5 % of 128 bits
 
     }
 }

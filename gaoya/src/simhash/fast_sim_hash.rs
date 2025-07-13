@@ -221,30 +221,30 @@ mod tests {
         // Helper identical to the small test
         fn whitespace_split(s: &str) -> impl Iterator<Item = &str> { s.split_whitespace() }
 
-        type Bits = BitArray<16>;
-        const L: usize = 1024;
+        type Bits = BitArray<2>;
+        const L: usize = 128;
         // build deterministic test data 
         const N: usize = 10_000;
         let mut rng = StdRng::seed_from_u64(42);
 
         // S1: 10 000 random u64 numbers separated by spaces
         let data1: Vec<u64> = (0..N).map(|_| rng.gen()).collect();
-        let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-
+        //let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+        let s1 = &data1;
         // S2: clone + tweak every 20th element  (≈5 % difference)
         let mut data2 = data1.clone();
         for i in (0..N).step_by(20) {
             data2[i] = data2[i].wrapping_add(1);
         }
-        let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-
-        let fsh = FastSimHash::<Xxh3Hasher64, Bits, L>::new(Xxh3Hasher64::new());
+        //let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
+        let s2 = &data2;
+        let fsh = FastSimHash::<Xxh3Hasher64, Bits, L, 4>::new(Xxh3Hasher64::new());
         let t1 = Instant::now();
-        let h1 = fsh.create_signature(whitespace_split(&s1));
-        let h2 = fsh.create_signature(whitespace_split(&s2));
+        let h1 = fsh.create_signature(s1.iter().cloned());
+        let h2 = fsh.create_signature(s2.iter().cloned());
         let dur_fast = t1.elapsed();
         println!("fast  SimHash: {:?}", dur_fast);
         // 5 % token change → expect roughly 5 % differing bits
-        assert!(h1.hamming_distance(&h2) < 52);
+        assert!(h1.hamming_distance(&h2) < 17);
     }
 }
