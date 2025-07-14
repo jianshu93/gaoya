@@ -135,24 +135,23 @@ mod tests {
         const N: usize = 10_000;
         let mut rng = StdRng::seed_from_u64(42);
 
-        // S1: 10 000 random u64 numbers separated by spaces
-        let data1: Vec<u64> = (0..N).map(|_| rng.gen()).collect();
-        //let s1 = data1.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-        let s1 = &data1;
-        // S2: clone + tweak every 20th element  (≈5 % difference)
+        // Make two vectors that are complements in half their bits.
+        let data1: Vec<u8> = (0..N).map(|_| rng.gen_range(0..2)).collect();
         let mut data2 = data1.clone();
-        for i in (0..N).step_by(20) {
-            data2[i] = data2[i].wrapping_add(1);
+        for i in (0..N).step_by(4) {
+            data2[i] = 1 - data2[i];
         }
-        // let s2 = data2.iter().map(u64::to_string).collect::<Vec<_>>().join(" ");
-        let s2 = &data2;
+
         let sim_hash = SimHash::<Xxh3Hasher128, u128, 128>::new(Xxh3Hasher128::new());
         let t1 = Instant::now();
-        let s1 = sim_hash.create_signature(s1.iter().cloned());
-        let s2 = sim_hash.create_signature(s2.iter().cloned());
+        let h1 = sim_hash.create_signature((0..N).map(|i| (i as u64, data1[i])));
+        let h2 = sim_hash.create_signature((0..N).map(|i| (i as u64, data2[i])));
         let dur = t1.elapsed();
         println!("SimHash: {:?}", dur);
-        assert!(s1.hamming_distance(&s2) < 19);     // ≈5 % of 128 bits
+        let hd = h1.hamming_distance(&h2);
+        println!("Estimated bit difference: {}", hd);
+
+        assert!(h1.hamming_distance(&h2) < 51);
 
     }
 }
