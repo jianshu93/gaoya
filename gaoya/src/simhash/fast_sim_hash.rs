@@ -1,7 +1,8 @@
 // Faithful Rust port of Dynatrace’s  “10× faster SimHash” bit-hack
 // see original post here: https://www.dynatrace.com/engineering/blog/speeding-up-simhash-by-10x-using-a-bit-hack/
-//  * unsigned packed counters
-//  * single Vec<u64> for the temporary lanes
+// and Java reference implementation here: https://github.com/dynatrace-oss/hash4j/blob/main/src/main/java/com/dynatrace/hash4j/similarity/FastSimHashPolicy_v1.java
+// unsigned packed counters
+// single Vec<u64> for the temporary lanes
 
 use core::marker::PhantomData;
 use rand_core::{RngCore, SeedableRng};
@@ -151,14 +152,14 @@ mod tests {
     use std::time::Instant;
     #[test]
     fn fast_simhash_bitarray() {
-        type Bits = BitArray<2>;
-        const L: usize = 128;
-        const N: usize = 10_000;
+        type Bits = BitArray<16>;
+        const L: usize = 1024;
+        const N: usize = 100_000;
 
         let mut rng  = StdRng::seed_from_u64(41);
         let data1: Vec<u8> = (0..N).map(|_| rng.gen_range(0..=1)).collect();
         let mut data2       = data1.clone();
-        for i in (0..N).step_by(5) { data2[i] ^= 1; }
+        for i in (0..N).step_by(4) { data2[i] ^= 1; }
 
         // ground-truth cosine and angle
         let (mut dot, mut n1, mut n2) = (0f64, 0f64, 0f64);
@@ -185,7 +186,7 @@ mod tests {
         let h2  = fsh.create_signature((0..N).map(|i| (i as u64, data2[i])));
         let hd  = h1.hamming_distance(&h2);
         let dur = t1.elapsed();
-        println!("SimHash: {:?}", dur);
+        println!("fast SimHash: {:?}", dur);
         println!("HD = {hd}, expected ≈ {low}–{high}  (p_bit ≈ {:.3})", p_bit);
         println!("expected {:.3}", mean);
         assert!((low..=high).contains(&hd));
