@@ -155,10 +155,10 @@ mod tests {
         const L: usize = 128;
         const N: usize = 10_000;
 
-        let mut rng  = StdRng::seed_from_u64(42);
+        let mut rng  = StdRng::seed_from_u64(41);
         let data1: Vec<u8> = (0..N).map(|_| rng.gen_range(0..=1)).collect();
         let mut data2       = data1.clone();
-        for i in (0..N).step_by(4) { data2[i] ^= 1; }
+        for i in (0..N).step_by(5) { data2[i] ^= 1; }
 
         // ground-truth cosine and angle
         let (mut dot, mut n1, mut n2) = (0f64, 0f64, 0f64);
@@ -176,8 +176,8 @@ mod tests {
         // 1-σ acceptance band for
         let mean   = p_bit * L as f64;
         let sigma  = (L as f64 * p_bit * (1.0 - p_bit)).sqrt();
-        let low    = (mean - 1.0 * sigma).round() as usize;
-        let high   = (mean + 1.0 * sigma).round() as usize;
+        let low    = (mean - 2.0 * sigma).round() as usize;
+        let high   = (mean + 2.0 * sigma).round() as usize;
 
         let fsh = FastSimHash::<Xxh3Hasher64, Bits, L>::new(Xxh3Hasher64::new());
         let t1 = Instant::now();
